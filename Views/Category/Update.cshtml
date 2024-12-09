@@ -1,0 +1,22 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model Inventory.Models.Category
+@{
+    ViewData["Title"] = "Update";
+}
+<div class="cantainer">
+    <div class="row">
+        <div class="col-8 offset-2">
+            <h2 class="text-info text-center">Update Category</h2>
+            <form>
+                <div class="form-group p-1">
+                    <label asp-for="CategoryName">Category Name</label>
+                    <input type="text" class="form-control" asp-for="CategoryName" placeholder="Name">
+                    <input type="hidden" asp-for="CategoryId" />
+                </div>
+                <button type="submit" class="btn btn-primary" value="Update" asp-controller="Category" formmethod="post" asp-action="Update">Update</button>
+            </form>
+        </div>
+    </div>
+</div>
