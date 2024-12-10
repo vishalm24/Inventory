@@ -13,7 +13,7 @@ namespace Inventory.Controllers
         {
             this.context = context;
         }
-        public IActionResult Index()
+        public IActionResult Index(int pg = 1)
         {
             ////Instance of ProductCategoryList.cs from ViewModel because we can't share multiple data in return.
             ////That's why we needed to create ProductCategoryList
@@ -21,7 +21,13 @@ namespace Inventory.Controllers
             //prod.Products = context.Products.ToList();
             //prod.Categories = context.Categories.ToList();
             //return View(prod);
-
+            List<Product> products = context.Products.ToList();
+            const int pageSize = 10;
+            if (pg < 1) 
+                pg = 1;
+            int recsCount = products.Count;
+            var pager = new Pager(recsCount, pg, pageSize);
+            int resSkip = (pg - 1) * pageSize;
             var data = (from p in context.Products
                         join c in context.Categories
                         on p.CategoryId equals c.CategoryId
@@ -31,7 +37,8 @@ namespace Inventory.Controllers
                             ProductName = p.ProductName,
                             CategoryId = c.CategoryId,
                             CategoryName = c.CategoryName
-                        }).ToList();
+                        }).Skip(resSkip).Take(pager.PageSize).ToList();
+            this.ViewBag.Pager = pager;
             return View(data);
         }
 

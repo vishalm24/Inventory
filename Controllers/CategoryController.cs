@@ -12,9 +12,17 @@ namespace Inventory.Controllers
             this.context = context;
         }
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public IActionResult Index(int pg = 1)
         {
-            var data = await context.Categories.ToListAsync();
+            List<Category> categories = context.Categories.ToList();
+            const int pageSize = 10;
+            if (pg < 1)
+                pg = 1;
+            int recsCount = categories.Count();
+            var pager = new Pager(recsCount, pg, pageSize);
+            int recSkip = (pg - 1) * pageSize;
+            var data = categories.Skip(recSkip).Take(pager.PageSize).ToList();
+            this.ViewBag.Pager = pager;
             return View(data);
         }
 
