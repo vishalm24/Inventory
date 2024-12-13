@@ -2,6 +2,7 @@
 using Inventory.Models;
 using Inventory.Models.ViewModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Inventory.Controllers
@@ -70,13 +71,19 @@ namespace Inventory.Controllers
         [HttpPost]
         public async Task<IActionResult> AddProduct(Product product)
         {
+            bool isDuplicate = await context.Products
+                .AnyAsync(p => p.ProductName == product.ProductName);
+            if (isDuplicate)
+            {
+                ViewData["Message"] = ("A product with the same name already exists");
+                return View("AddProduct");
+            }
             await context.Products.AddAsync(product);
             TempData["success"] = "Product has been created!";
             await context.SaveChangesAsync();
             return RedirectToAction("Index");
         }
 
-        [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
             if (id != 0)
@@ -91,7 +98,7 @@ namespace Inventory.Controllers
                     context.Products.Remove(product);
                     await context.SaveChangesAsync();
                     TempData["success"] = "Product has been sucessfully deleted!";
-
+                    
                 }
             }
             else

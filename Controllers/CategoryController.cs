@@ -54,12 +54,18 @@ namespace Inventory.Controllers
         [HttpPost]
         public async Task<IActionResult> AddCategory(Category category)
         {
+            bool isDuplicate = await context.Categories
+                .AnyAsync(p => p.CategoryName == category.CategoryName);
+            if (isDuplicate)
+            {
+                ViewData["Message"] = ("A category with the same name already exists");
+                return View("AddCategory");
+            }
             await context.Categories.AddAsync(category);
             await context.SaveChangesAsync();
             return RedirectToAction("Index");
         }
 
-        [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
             if (id != 0)
