@@ -16,12 +16,6 @@ namespace Inventory.Controllers
         }
         public IActionResult Index(int pg = 1)
         {
-            ////Instance of ProductCategoryList.cs from ViewModel because we can't share multiple data in return.
-            ////That's why we needed to create ProductCategoryList
-            //ProductCategoryList prod = new ProductCategoryList();
-            //prod.Products = context.Products.ToList();
-            //prod.Categories = context.Categories.ToList();
-            //return View(prod);
             List<Product> products = context.Products.ToList();
             const int pageSize = 10;
             if (pg < 1) 
