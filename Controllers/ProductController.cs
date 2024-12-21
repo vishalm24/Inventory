@@ -1,4 +1,5 @@
 ﻿using Inventory.Data;
+using Inventory.IServices;
 using Inventory.Models;
 using Inventory.Models.ViewModel;
 using Microsoft.AspNetCore.Mvc;
@@ -9,32 +10,17 @@ namespace Inventory.Controllers
 {
     public class ProductController : Controller
     {
-        private readonly ApplicationContext context;
-        public ProductController(ApplicationContext context)
+        private readonly IProductRepository _productRepository;
+        public ProductController(IProductRepository productRepository)
         {
-            this.context = context;
+            _productRepository = productRepository;
         }
+
         public IActionResult Index(int pg = 1)
         {
-            List<Product> products = context.Products.ToList();
-            const int pageSize = 10;
-            if (pg < 1) 
-                pg = 1;
-            int recsCount = products.Count;
-            var pager = new Pager(recsCount, pg, pageSize);
-            int resSkip = (pg - 1) * pageSize;
-            var data = (from p in context.Products
-                        join c in context.Categories
-                        on p.CategoryId equals c.CategoryId
-                        select new ProductCategorySummaryViewModel
-                        {
-                            ProductId = p.ProductId,
-                            ProductName = p.ProductName,
-                            CategoryId = c.CategoryId,
-                            CategoryName = c.CategoryName
-                        }).Skip(resSkip).Take(pager.PageSize).ToList();
-            this.ViewBag.Pager = pager;
-            return View(data);
+            var indexData = _productRepository.Index(pg);
+            this.ViewBag.Pager = indexData.pager;
+            return View(indexData.data);
         }
 
         [HttpGet]
@@ -42,60 +28,45 @@ namespace Inventory.Controllers
         {
             return View();
         }
+        [HttpPost]
+        public async Task<IActionResult> AddProduct(Product product)
+        {
+            bool isDuplicate = _productRepository.AddCategory(product);
+            if (isDuplicate)
+            {
+                ViewData["Message"] = ("A product with the same name already exists");
+                return View("AddProduct");
+            }
+            TempData["success"] = "Product has been created!";
+            return RedirectToAction("Index");
+        }
 
         public async Task<IActionResult> Update(int? id)
         {
-            Product product = new Product();
-            if (id != null && id != 0)
-            {
-                product = await context.Products.FindAsync(id);
-            }
+            Product product = _productRepository.Update(id);
             return View(product);
         }
 
         [HttpPost]
         public async Task<IActionResult> Update(Product product)
         {
-            context.Products.Update(product);
+            _productRepository.Update(product);
             TempData["success"] = "Product has been updated!";
-            await context.SaveChangesAsync();
-            return RedirectToAction("Index");
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> AddProduct(Product product)
-        {
-            bool isDuplicate = await context.Products
-                .AnyAsync(p => p.ProductName == product.ProductName);
-            if (isDuplicate)
-            {
-                ViewData["Message"] = ("A product with the same name already exists");
-                return View("AddProduct");
-            }
-            await context.Products.AddAsync(product);
-            TempData["success"] = "Product has been created!";
-            await context.SaveChangesAsync();
             return RedirectToAction("Index");
         }
 
         public async Task<IActionResult> Delete(int id)
         {
-            if (id != 0)
+            string message = _productRepository.Delete(id);
+            if(message.Equals("Not Found"))
             {
-                var product = await context.Products.FindAsync(id);
-                if (product == null)
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    context.Products.Remove(product);
-                    await context.SaveChangesAsync();
-                    TempData["success"] = "Product has been sucessfully deleted!";
-                    
-                }
+                return NotFound();
             }
-            else
+            else if (message.Equals("Success"))
+            {
+                TempData["success"] = "Product has been sucessfully deleted!";
+            }
+            else if (message.Equals("Bad Request"))
             {
                 return BadRequest();
             }

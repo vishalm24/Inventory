@@ -1,4 +1,7 @@
+using Inventory.Controllers;
 using Inventory.Data;
+using Inventory.IServices;
+using Inventory.Services;
 using Microsoft.EntityFrameworkCore;
 
 //We meed builder variable for new service creation.
@@ -9,8 +12,9 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationContext>(option => {
     option.UseSqlServer(builder.Configuration.GetConnectionString("ProductionDB"));
 });
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 var app = builder.Build();
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
