@@ -66,7 +66,12 @@ namespace Inventory.Services
                 bool status = _context.Products.Any(x => x.CategoryId == id);
                 if (status)
                 {
-                    return "Category Taken";
+                    var category = _context.Categories.Find(id);
+                    var products = _context.Products.Where(p => p.CategoryId == id).ToList();
+                    _context.RemoveRange(products);
+                    _context.Categories.Remove(category);
+                    _context.SaveChanges();
+                    return "Category with Products";
                 }
                 else
                 {

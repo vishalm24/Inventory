@@ -56,9 +56,9 @@ namespace Inventory.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             string message = _categoryRepository.Delete(id);
-            if(message.Equals("Category Taken"))
+            if(message.Equals("Category with Products"))
             {
-                TempData["warning"] = "Category is taken by another product!";
+                TempData["warning"] = "Category with Products has been deleted";
             }
             else if(message.Equals("Not Found"))
             {
